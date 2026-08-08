@@ -162,6 +162,24 @@ const ARENA_HALF = 6.2;
 const GROUND_Y = 0;
 
 // ---------- Fighter factory ----------
+function makeCapsule(radius, length, mat, segments) {
+  // r128-safe capsule: cylinder body + two sphere caps, grouped as one object
+  segments = segments || 8;
+  const g = new THREE.Group();
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, segments), mat);
+  cyl.castShadow = true;
+  g.add(cyl);
+  const capTop = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, Math.max(segments/2,4)), mat);
+  capTop.position.y = length/2;
+  capTop.castShadow = true;
+  g.add(capTop);
+  const capBot = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, Math.max(segments/2,4)), mat);
+  capBot.position.y = -length/2;
+  capBot.castShadow = true;
+  g.add(capBot);
+  return g;
+}
+
 function buildFighter(color, accent) {
   const group = new THREE.Group();
 
@@ -170,7 +188,7 @@ function buildFighter(color, accent) {
   const accentMat = new THREE.MeshStandardMaterial({ color: accent, roughness:.4 });
 
   // torso
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.55, 4, 8), mat);
+  const torso = makeCapsule(0.32, 0.55, mat, 8);
   torso.position.y = 1.05;
   torso.castShadow = true;
   group.add(torso);
@@ -197,15 +215,13 @@ function buildFighter(color, accent) {
   function makeArm(sign) {
     const pivot = new THREE.Group();
     pivot.position.set(0.42*sign, 1.32, 0);
-    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.32, 4, 6), mat);
+    const upper = makeCapsule(0.11, 0.32, mat, 6);
     upper.position.y = -0.18;
-    upper.castShadow = true;
     pivot.add(upper);
     const forePivot = new THREE.Group();
     forePivot.position.y = -0.36;
-    const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.095, 0.3, 4, 6), skin);
+    const fore = makeCapsule(0.095, 0.3, skin, 6);
     fore.position.y = -0.16;
-    fore.castShadow = true;
     forePivot.add(fore);
     const fist = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), skin);
     fist.position.y = -0.34;
@@ -221,16 +237,15 @@ function buildFighter(color, accent) {
   function makeLeg(sign) {
     const pivot = new THREE.Group();
     pivot.position.set(0.16*sign, 0.78, 0);
-    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.36, 4, 6), mat);
+    const upper = makeCapsule(0.13, 0.36, mat, 6);
     upper.position.y = -0.2;
-    upper.castShadow = true;
     pivot.add(upper);
     const lowerPivot = new THREE.Group();
     lowerPivot.position.y = -0.42;
-    const lower = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.34, 4, 6), mat.clone());
-    lower.material.color.multiplyScalar(0.82);
+    const lowerMat = mat.clone();
+    lowerMat.color.multiplyScalar(0.82);
+    const lower = makeCapsule(0.11, 0.34, lowerMat, 6);
     lower.position.y = -0.18;
-    lower.castShadow = true;
     lowerPivot.add(lower);
     const foot = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.28), accentMat);
     foot.position.set(0, -0.38, 0.05);
